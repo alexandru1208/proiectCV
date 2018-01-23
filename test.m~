@@ -1,11 +1,11 @@
 close all;
 clear all;
-rgbImage = imread('beach2.jpg');
+rgbImage = imread('beach.jpeg');
 bwImage = skin2bin(rgbImage);
 figure
 imshow(bwImage);
 
-[w,h] = size(bwImage);
+[w,h] = size
 minNrPixels = round(0.001 * w * h);
 
 image = bwareaopen(bwImage,minNrPixels);
