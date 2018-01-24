@@ -1,6 +1,5 @@
 function [ bwImage ] = skin2bin( rgbImage )
 hsvImage = rgb2hsv(rgbImage);
-imshow(rgbImage)
 [w,h,~] = size(rgbImage);
 bwImage = zeros(w,h);
 for r = 1 : w
