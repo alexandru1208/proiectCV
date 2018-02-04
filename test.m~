@@ -71,17 +71,19 @@ while done == 0
     nrBoxes = size(boxes,1);
 end
 
-% compute the percentage of skin pixels in each box
+% compute the 
 percentageOfComponenets = zeros(1,nrBoxes);
 for i = 1 : nrBoxes
     area = bwarea(imcrop(bwImage,boxes(i,:)));
     percentageOfComponenets(i) = area/(boxes(i,3)*boxes(i,4));
 end
 
+largestPercentage = max(percentageOfComponenets);
 
-% decide for each box if it contains a naked person
+
 labels = zeros(1,nrBoxes);
 for i = 1 : nrBoxes
+    
     facesBoxes = getFace(imcrop(rgbImage,boxes(i,:)));
     if isempty(facesBoxes)
         if percentageOfComponenets(i) <= 0.3
@@ -107,6 +109,7 @@ for i = 1 : nrBoxes
         end
     end
 end
+% end
 
 J = insertObjectAnnotation(rgbImage,'rectangle',boxes,labels,'LineWidth',3, 'Color','red' ,'TextColor','black');
 figure
