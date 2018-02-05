@@ -1,8 +1,11 @@
 clc
 close all;
 clear all;
-rgbImage = imread('positive7.jpg');
+rgbImage = imread('positive2.jpg');
 bwImage = skin2bin(rgbImage);
+
+figure
+imshow(bwImage)
 
 [w,h] = size(bwImage);
 nrPixels = w*h;
@@ -12,8 +15,6 @@ nrPixels = w*h;
 minNrPixels = round(0.001 * nrPixels);
 bwImage = bwareaopen(bwImage,minNrPixels);
 % compute the total area of supposed skin pixels found
-skinAreaFound = bwarea(bwImage);
-percentOfSkin = skinAreaFound/nrPixels;
 
 figure
 imshow(bwImage)
@@ -53,7 +54,7 @@ while done == 0
     for i=1 : nrBoxes
         for j=i+1 : nrBoxes
             overlapRatio = bboxOverlapRatio(boxes(i,:),boxes(j,:));
-            if (overlapRatio ~= 0)    
+            if (overlapRatio ~= 0)
                 fusedBox = joinBoxes([boxes(i,:);boxes(j,:)]);
                 boxes([i,j],:) = [];
                 boxes = [boxes;fusedBox];
@@ -71,36 +72,38 @@ while done == 0
     nrBoxes = size(boxes,1);
 end
 
-% compute the percentage of skin pixels in each box
+
+% compute the percentage of skin pixels in each box: %SkinInBox
 percentageOfComponenets = zeros(1,nrBoxes);
 for i = 1 : nrBoxes
     area = bwarea(imcrop(bwImage,boxes(i,:)));
     percentageOfComponenets(i) = area/(boxes(i,3)*boxes(i,4));
 end
 
-
 % decide for each box if it contains a naked person
 labels = zeros(1,nrBoxes);
 for i = 1 : nrBoxes
-    facesBoxes = getFace(imcrop(rgbImage,boxes(i,:)));
+    facesBoxes = getFaces(imcrop(rgbImage,boxes(i,:)));
     if isempty(facesBoxes)
         if percentageOfComponenets(i) <= 0.3
-            labels(i) = -1;
+            if (boxes(i,3)*boxes(i,4))/nrPixels > 0.1
+                labels(i) = 1;
+            else
+                labels(i) = -1;
+            end
         else
-            if (boxes(i,3)*boxes(i,4))/nrPixels <= 0.1
+            if (boxes(i,3)*boxes(i,4))/nrPixels <= 0.1 % %boxInImage
                 labels(i) = -1;
             else
                 labels(i) = 1;
-                
             end
         end
-        
     else
         faceBox = joinBoxes(facesBoxes);
         faceBox(1) = faceBox(1) + boxes(i,1);
         faceBox(2) = faceBox(2) + boxes(i,2);
         
-        if bwarea(imcrop(bwImage,faceBox))/bwarea(imcrop(bwImage,boxes(i,:))) > 0.3
+        if bwarea(imcrop(bwImage,faceBox))/bwarea(imcrop(bwImage,boxes(i,:))) > 0.3 % %faceSkinInSkinBox
             labels(i) = -1';
         else
             labels(i) = 1;
@@ -108,9 +111,28 @@ for i = 1 : nrBoxes
     end
 end
 
-J = insertObjectAnnotation(rgbImage,'rectangle',boxes,labels,'LineWidth',3, 'Color','red' ,'TextColor','black');
+
 figure
-imshow(J)
+imshow(rgbImage)
+hold on
+
+for i = 1 : size(labels,2)
+    x = [boxes(i,1),boxes(i,1)+boxes(i,3),boxes(i,1)+boxes(i,3),boxes(i,1)];
+    y = [boxes(i,2)+boxes(i,4),boxes(i,2)+boxes(i,4),boxes(i,2),boxes(i,2)];
+    if labels(i) == 1
+        patch(x,y,'red','FaceAlpha', 0.3)
+        hold on
+    else
+        patch(x,y,'green','FaceAlpha', 0.3)
+        hold on
+    end
+end
+
+hold off
+
+% J = insertObjectAnnotation(rgbImage,'rectangle',boxes,labels,'LineWidth',3, 'Color','red' ,'TextColor','black','TextSize',15);
+% figure
+% imshow(J)
 
 
 
